@@ -1,25 +1,33 @@
 'use strict'
 
-const getData = () => {
-   return fetch('db.json')
-        .then(response => response.json())
-        .catch(error => {console.log(error)})
-};
+const urlGet = 'db.json';
+const urlPost = 'https://jsonplaceholder.typicode.com/posts';
+let body;
 
-const sendData = () => {
-    getData()
-        .then(object => {
-            fetch('https://jsonplaceholder.typicode.com/posts', {
-                method: 'POST',
-                body: JSON.stringify(object),
-                headers: {
-                    'Content-Type': 'application/json;charset=utf-8'
-                  }
-            })
-                .then(response => response.json()) 
-                .then(result => console.log('Результат:', result))
-                .catch(error => console.log('Ошибка:', error));
-        }) 
-};
+function sendRequest(method, url, body=null) {
+    return new Promise((resolve, reject) => {
+        let xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.responseType = 'json';
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = () => {
+            if (xhr.status >= 400) {
+                reject(console.log("Ошибка"))
+            } else {resolve(xhr.response)}
+        };
+        xhr.onerror = () => {
+            reject("Ошибка сети");
+        };
+        xhr.send(body ? JSON.stringify(body) : null);
+    })
+}
 
-sendData();
+sendRequest('GET', urlGet)
+    .then(data => {
+        body = data;
+        console.log('GET response:', data);
+        return sendRequest('POST', urlPost, body);})
+    .catch (error => {console.log(error)})
+
+
+
